@@ -27,13 +27,13 @@ class PengumumanController extends Controller
         ]);
     }
 
- public function postChange(Request $request)
-    {
+public function postChange(Request $request)
+{
+    try {
         $request->validate([
             'judul' => 'required|string|max:255',
             'isi' => 'required|string',
             'expired_date' => 'required|date',
-            // Pertegas di sini: Harus file gambar (jpg/png), bukan teks, maks 2MB
             'gambar' => 'nullable|mimes:jpg,jpeg,png|max:2048', 
         ]);
 
@@ -53,8 +53,6 @@ class PengumumanController extends Controller
                 }
             }
             
-            // File fisik .jpg/.png disimpan ke folder 'uploads/pengumuman'
-            // $path akan berisi string seperti "uploads/pengumuman/namafileacak.jpg"
             $path = $request->file('gambar')->store('uploads/pengumuman', 'public');
             $data['gambar_path'] = $path;
         }
@@ -62,7 +60,11 @@ class PengumumanController extends Controller
         PengumumanModel::updateOrCreate(['id' => $request->id], $data);
 
         return redirect()->back()->with('success', 'Data berhasil disimpan');
+        
+    } catch (\Exception $e) {
+        return redirect()->back()->with('error', 'Terjadi kesalahan: ' . $e->getMessage());
     }
+}
 
     public function postDelete(Request $request)
     {

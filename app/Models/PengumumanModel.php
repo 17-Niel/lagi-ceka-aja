@@ -1,4 +1,5 @@
 <?php
+// App/Models/PengumumanModel.php
 
 namespace App\Models;
 
@@ -16,5 +17,12 @@ class PengumumanModel extends Model
         'isi',
         'expired_date',
         'gambar_path',
+    ];
+
+    // Tambahkan casting untuk dates
+    protected $casts = [
+        'expired_date' => 'date:Y-m-d',
+        'created_at' => 'datetime',
+        'updated_at' => 'datetime',
     ];
 }
