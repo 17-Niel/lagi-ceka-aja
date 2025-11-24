@@ -15,7 +15,9 @@ class PengumumanController extends Controller
         $query = PengumumanModel::query();
 
         if ($request->search) {
-            $query->where('judul', 'like', "%{$request->search}%");
+            // Case-insensitive search
+            $searchTerm = strtolower($request->search);
+            $query->whereRaw('LOWER(judul) LIKE ?', ["%{$searchTerm}%"]);
         }
 
         // Urutkan dari yang terbaru
@@ -26,6 +28,7 @@ class PengumumanController extends Controller
             'filters' => $request->only(['search']),
         ]);
     }
+
 
 public function postChange(Request $request)
 {
