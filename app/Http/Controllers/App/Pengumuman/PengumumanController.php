@@ -11,23 +11,29 @@ use Inertia\Inertia;
 class PengumumanController extends Controller
 {
     public function index(Request $request)
-    {
-        $query = PengumumanModel::query();
+{
+    $query = PengumumanModel::query();
 
-        if ($request->search) {
-            // Case-insensitive search
-            $searchTerm = strtolower($request->search);
-            $query->whereRaw('LOWER(judul) LIKE ?', ["%{$searchTerm}%"]);
-        }
-
-        // Urutkan dari yang terbaru
-        $data = $query->orderBy('created_at', 'desc')->paginate(10);
-
-        return Inertia::render('app/pengumuman/pengumuman-page', [
-            'data' => $data,
-            'filters' => $request->only(['search']),
-        ]);
+    if ($request->filled('search')) {
+        $searchTerm = strtolower($request->search);
+        
+        // Menggunakan wrapping function($q) agar logika OR tidak merusak filter lain (jika ada)
+        $query->where(function ($q) use ($searchTerm) {
+            // Cari di Judul (huruf kecil vs huruf kecil)
+            $q->whereRaw('LOWER(judul) LIKE ?', ["%{$searchTerm}%"])
+              // OPSIONAL: Cari juga di dalam Isi pengumuman agar hasil lebih banyak
+              ->orWhereRaw('LOWER(isi) LIKE ?', ["%{$searchTerm}%"]);
+        });
     }
+
+    // Urutkan dari yang terbaru
+    $data = $query->orderBy('created_at', 'desc')->paginate(10);
+
+    return Inertia::render('app/pengumuman/pengumuman-page', [
+        'data' => $data,
+        'filters' => $request->only(['search']),
+    ]);
+}
 
 
 public function postChange(Request $request)
@@ -36,8 +42,11 @@ public function postChange(Request $request)
         $request->validate([
             'judul' => 'required|string|max:255',
             'isi' => 'required|string',
-            'expired_date' => 'required|date',
+            'expired_date' => 'required|date|after_or_equal:today',
             'gambar' => 'nullable|mimes:jpg,jpeg,png|max:2048', 
+            'delete_gambar' => 'nullable|boolean', // <--- Tambahkan validasi ini
+        ], [
+            'expired_date.after_or_equal' => 'Tanggal kedaluwarsa tidak boleh tanggal yang sudah lewat.',
         ]);
 
         $data = [
@@ -46,24 +55,38 @@ public function postChange(Request $request)
             'expired_date' => $request->expired_date,
         ];
 
-        // Proses Simpan File Asli
+        // Ambil data lama jika mode edit
+        $oldData = null;
+        if ($request->id) {
+            $oldData = PengumumanModel::find($request->id);
+        }
+
+        // --- LOGIKA GAMBAR BARU ---
         if ($request->hasFile('gambar')) {
-            // Hapus file lama dari folder jika sedang edit
-            if ($request->id) {
-                $old = PengumumanModel::find($request->id);
-                if ($old && $old->gambar_path) {
-                    Storage::disk('public')->delete($old->gambar_path);
-                }
+            // 1. Jika User Upload Gambar Baru
+            // Hapus gambar lama jika ada
+            if ($oldData && $oldData->gambar_path) {
+                Storage::disk('public')->delete($oldData->gambar_path);
             }
-            
+            // Simpan gambar baru
             $path = $request->file('gambar')->store('uploads/pengumuman', 'public');
             $data['gambar_path'] = $path;
+
+        } elseif ($request->boolean('delete_gambar')) { 
+            // 2. Jika User Klik Hapus Gambar (Tanpa upload baru)
+            if ($oldData && $oldData->gambar_path) {
+                Storage::disk('public')->delete($oldData->gambar_path);
+            }
+            // Set ke NULL di database
+            $data['gambar_path'] = null; 
         }
 
         PengumumanModel::updateOrCreate(['id' => $request->id], $data);
 
         return redirect()->back()->with('success', 'Data berhasil disimpan');
         
+    } catch (\Illuminate\Validation\ValidationException $e) {
+        return redirect()->back()->withErrors($e->errors())->withInput();
     } catch (\Exception $e) {
         return redirect()->back()->with('error', 'Terjadi kesalahan: ' . $e->getMessage());
     }

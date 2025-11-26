@@ -52,11 +52,20 @@ export default function AppLayout({ children }) {
                     url: route("todo"),
                     icon: Icon.IconChecklist,
                 },
-                // PERBAIKAN: Menu Pengumuman dimasukkan ke sini (dalam items)
                 {
                     title: "Pengumuman",
                     url: route("pengumuman.index"),
                     icon: Icon.IconSpeakerphone,
+                },
+                {
+                    title: "Berita",
+                    url: route("berita.index"),
+                    icon: Icon.IconSpeakerphone,
+                },
+                {
+                    title: "Artikel",
+                    url: route("artikel"),
+                    icon: Icon.IconFile,
                 },
             ],
         },

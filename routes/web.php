@@ -6,6 +6,8 @@ use App\Http\Controllers\App\Todo\TodoController;
 use App\Http\Controllers\Auth\AuthController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\App\Pengumuman\PengumumanController;
+use App\Http\Controllers\App\Berita\BeritaController;
+use App\Http\Controllers\App\Artikel\ArtikelController;
 
 Route::middleware(['throttle:req-limit', 'handle.inertia'])->group(function () {
     // SSO Routes
@@ -53,5 +55,21 @@ Route::middleware(['throttle:req-limit', 'handle.inertia'])->group(function () {
             Route::post('/change', [PengumumanController::class, 'postChange'])->name('change');
             Route::post('/delete', [PengumumanController::class, 'postDelete'])->name('delete');
         });
+
+        // Route Khusus Berita
+    Route::prefix('berita')->name('berita.')->group(function () {
+        Route::get('/', [BeritaController::class, 'index'])->name('index'); 
+        
+        // Action Simpan & Hapus
+        Route::post('/store', [BeritaController::class, 'store'])->name('store');
+        Route::post('/delete', [BeritaController::class, 'destroy'])->name('delete');
+    });
+        // Artikel Routes
+        Route::prefix('artikel')->group(function () {
+            Route::get('/', [ArtikelController::class, 'index'])->name('artikel');
+            Route::post('/change', [ArtikelController::class, 'changePost'])->name('artikel.change-post');
+            Route::post('/delete', [ArtikelController::class, 'deletePost'])->name('artikel.delete-post');
+        });
+    
     });
 });
