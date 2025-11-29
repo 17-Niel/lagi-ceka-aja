@@ -1,6 +1,4 @@
 <?php
-// App/Models/PengumumanModel.php
-
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;

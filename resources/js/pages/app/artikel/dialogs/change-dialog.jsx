@@ -30,18 +30,18 @@ export function ArtikelChangeDialog({
         e.preventDefault();
 
         const payload = {
-            id: dataEdit?.artikelId,
+            artikelId: dataEdit?.artikelId, // GANTI 'id' jadi 'artikelId' agar sesuai validasi Controller
             title,
             content,
             category,
-            is_published: isPublished,
+            isPublished: isPublished, // Pastikan key ini sama dengan yang diminta Controller
         };
 
-        router.post(route("artikel.save"), payload, {
+        // PERBAIKAN: Gunakan nama route yang benar 'artikel.change-post'
+        router.post(route("artikel.change-post"), payload, {
             onSuccess: () => setOpenDialog(false),
         });
     };
-
     if (!openDialog) return null;
 
     return (

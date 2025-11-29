@@ -57,6 +57,7 @@ class ArtikelController extends Controller
             'artikelId' => 'nullable|exists:artikels,id',
             'title' => 'required|string|max:255',
             'content' => 'required|string|min:10',
+            'category' => 'required|string',
             'isPublished' => 'boolean',
         ], [
             'title.required' => 'Judul tidak boleh kosong',
